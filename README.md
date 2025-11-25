@@ -1,1 +1,0 @@
-# Praktikum-1-Datenbaken-1
