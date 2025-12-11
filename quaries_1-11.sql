@@ -72,12 +72,12 @@ HAVING count(boss) = (
 	GROUP BY professoren.name ORDER BY assistenten DESC LIMIT 1
 );
 
--- 7. unklar ob funktioniert, teste gleich noch, muss population erweitern um anständig zu testen
+-- 7. Welche Studierenden hören alle Vorlesungen?
 
-SELECT studenten.name
+SELECT studenten.name,studenten.matrnr
 FROM studenten 
 JOIN hoeren ON hoeren.matrnr=studenten.matrnr 
-GROUP BY studenten.name
+GROUP BY studenten.name,studenten.matrnr
 
 HAVING count(*) = (
 	SELECT count(*) 
@@ -86,12 +86,47 @@ HAVING count(*) = (
 
 -- 8. Wie oft wurde eine Prüfung mit der Note 1 oder 2 bewertet?
 
-SELECT count(*) FROM pruefen WHERE note <3;
+SELECT count(*) FROM pruefen WHERE note <=2 AND note >=1;
 
 -- 9. Erstellen Sie eine Übersicht, in der die MatrNr und der Name der Studierenden zusammen mit der
 -- von ihnen erreichten Durchschnittsnote sowie dem dazugehörigen Varianz-Wert angeben werden.
 
-SELECT matrnr, AVG(note), (MAX(note)-MIN(note)) as var FROM pruefen GROUP BY matrnr;
+SELECT name,inf.matrnr,inf.avg,inf.var 
+FROM (SELECT matrnr, AVG(note), (MAX(note)-MIN(note)) as var FROM pruefen GROUP BY matrnr) as inf 
+JOIN studenten ON studenten.matrnr=inf.matrnr;
 
 -- 10. Gibt es Namen von Personen, die in mindestens zwei verschiedenen Tabellen auftreten?
 
+SELECT 
+CASE 
+	WHEN EXISTS (
+		SELECT a.name, p.name, s.name 
+		FROM assistenten as a,professoren as p,studenten as s 
+		WHERE a.name = p.name OR a.name = s.name OR p.name = s.name
+	) 
+	THEN 1
+	ELSE 0
+END
+
+
+-- 11. Erstellen Sie eine Übersicht, welche Vorlesung (VorlNr genügt) welche anderen Vorlesungen direkt
+-- oder indirekt als Voraussetzung hat
+
+SELECT * FROM 
+
+(
+SELECT DISTINCT v1.vorgaenger,v2.nachfolger as zielmodul 
+FROM voraussetzen as v1 
+RIGHT JOIN voraussetzen as v2 ON v1.nachfolger=v2.vorgaenger 
+
+UNION
+
+SELECT DISTINCT v2.vorgaenger,v2.nachfolger as zielmodul 
+FROM voraussetzen as v1 
+RIGHT JOIN voraussetzen as v2 ON v1.nachfolger=v2.vorgaenger
+)
+
+WHERE vorgaenger IS NOT NULL 
+ORDER BY zielmodul
+
+-- Indirekt nur bis zur zweiten Ebene, wahrscheinlich rekursive Lösung geforderdert?
