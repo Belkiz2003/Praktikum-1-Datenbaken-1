@@ -4,8 +4,15 @@
 SELECT s.MatrNr
 FROM Studenten s
 JOIN hoeren h ON s.MatrNr = h.MatrNr
-JOIN Vorlesungen v ON h.VorlNr = v.VorlNr
+JOIN Vorlesungen v ON h.VorlNr = v.VorlNr 
 WHERE v.Titel = 'Ethik';
+
+-- kürzere und vermutlich schnellere alternative:
+
+SELECT matrnr 
+FROM hoeren 
+JOIN vorlesungen ON vorlesungen.vorlnr = hoeren.vorlnr 
+WHERE vorlesungen.titel = 'Ethik';
 
 -- 2. Welche Studenten haben schon mal mit 'Schopenhauer' gemeinsam eine Vorlesung gehört?
 SELECT DISTINCT s.Name
@@ -49,4 +56,42 @@ FROM Vorlesungen v
 LEFT JOIN pruefen p ON v.VorlNr = p.VorlNr
 GROUP BY v.VorlNr, v.Titel
 ORDER BY Anzahl_Pruefungen DESC;
- 
+
+
+-- 6. Finden Sie den/die Professor(en) (Name ausgeben) mit den meisten Assistenten.
+
+SELECT professoren.name --, 
+--count(boss) as assistenten 
+FROM assistenten 
+JOIN professoren ON professoren.persnr=assistenten.boss 
+GROUP BY professoren.name 
+HAVING count(boss) = (
+	SELECT count(boss) as assistenten 
+	FROM assistenten 
+	JOIN professoren ON professoren.persnr=assistenten.boss 
+	GROUP BY professoren.name ORDER BY assistenten DESC LIMIT 1
+);
+
+-- 7. unklar ob funktioniert, teste gleich noch, muss population erweitern um anständig zu testen
+
+SELECT studenten.name
+FROM studenten 
+JOIN hoeren ON hoeren.matrnr=studenten.matrnr 
+GROUP BY studenten.name
+
+HAVING count(*) = (
+	SELECT count(*) 
+	FROM vorlesungen
+);
+
+-- 8. Wie oft wurde eine Prüfung mit der Note 1 oder 2 bewertet?
+
+SELECT count(*) FROM pruefen WHERE note <3;
+
+-- 9. Erstellen Sie eine Übersicht, in der die MatrNr und der Name der Studierenden zusammen mit der
+-- von ihnen erreichten Durchschnittsnote sowie dem dazugehörigen Varianz-Wert angeben werden.
+
+SELECT matrnr, AVG(note), (MAX(note)-MIN(note)) as var FROM pruefen GROUP BY matrnr;
+
+-- 10. Gibt es Namen von Personen, die in mindestens zwei verschiedenen Tabellen auftreten?
+
