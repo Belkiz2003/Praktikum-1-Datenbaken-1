@@ -1,50 +1,55 @@
--- *** AUFGABE 3: SQL-Optimierung ***
+-- *** AUFGABE 3: SQL-Optimierung von Michael Haselhof ***
 
--- * Abfrage aus 2, die mittels Index optimiert werden soll --> Abfrage 6
+-- * Abfrage aus Aufgabe 2, die mittels Index optimiert werden soll --> Abfrage 6
 
--- Abfrage vor der Optimierung
--- -6. Finden Sie den/die Professor(en) (Name ausgeben) mit den meisten Assistenten.
+-- 1. MESSUNG VOR DER OPTIMIERUNG
+-- Abfrage 6: Professor(en) mit den meisten Assistenten.
 
 EXPLAIN ANALYZE
--- ### START (Copy & Paste aus Aufgabe 2)###
-SELECT professoren.name --, -- <--- Falls gewünscht auskommentieren: zeigt dann auch noch die Anzahl der Assistenten an
---count(boss) as assistenten -- <--- Falls gewünscht auskommentieren: zeigt dann auch noch die MenAnzahlge der Assistenten an
-FROM assistenten 
-JOIN professoren ON professoren.persnr=assistenten.boss 
-GROUP BY professoren.name 
-HAVING count(boss) = ( -- Dieser Teil findet die größte Anzahl an Assistenten, um die dann mit allen Professoren zu vergleichen.
-	SELECT count(boss) as assistenten -- Diese Query alleine würde schon ausreichen um !DEN! Professor mit den meisten Assistenten zu ermitteln,
-	FROM assistenten                  -- aber es ist nach allen gefragt, muss dieser wert noch weiter mit allen abgeglichen werden.
-	JOIN professoren ON professoren.persnr=assistenten.boss 
-	GROUP BY professoren.name ORDER BY assistenten DESC LIMIT 1 --
+-- ### START (Optimierte Abfrage aus Aufgabe 2) ###
+SELECT p.Name, COUNT(a.Boss) AS Anzahl_Assistenten
+FROM Assistenten a
+JOIN Professoren p ON p.PersNr = a.Boss
+GROUP BY p.PersNr, p.Name 
+HAVING COUNT(a.Boss) = (
+    -- Unterabfrage: Findet die höchste Anzahl an Assistenten
+    SELECT COUNT(*)
+    FROM assistenten
+    GROUP BY Boss 
+    ORDER BY COUNT(*) DESC 
+    LIMIT 1 
 );
--- ### ENDE (Copy & Paste aus Aufgabe 2)###
+-- ### ENDE ###
 
 
--- Optimierung
--- -Temporäre Indexe erstellen
+-- 2. OPTIMIERUNG DURCHFÜHREN
+-- Temporäre Indexe erstellen
 CREATE INDEX profpersnr_indx ON professoren (name);
-CREATE INDEX assboss_indx ON assistenten (boss);    -- Wichtiger Index, weil Fremdschlüssel von PostgreSQL nativ nicht mit einem Index optimiert werden
+CREATE INDEX assboss_indx ON assistenten (boss);    -- Wichtiger Index! Fremdschlüssel werden in PostgreSQL nicht automatisch indiziert.
 
--- Optimierung testen
--- -Abfrage nach Indexerzeugung testen
+
+-- 3. MESSUNG NACH DER OPTIMIERUNG
+-- Dieselbe Abfrage noch einmal ausführen, um den Unterschied zu sehen.
+
 EXPLAIN ANALYZE
--- ### START (Copy & Paste aus Aufgabe 2)###
-SELECT professoren.name --, -- <--- Falls gewünscht auskommentieren: zeigt dann auch noch die Anzahl der Assistenten an
---count(boss) as assistenten -- <--- Falls gewünscht auskommentieren: zeigt dann auch noch die MenAnzahlge der Assistenten an
-FROM assistenten 
-JOIN professoren ON professoren.persnr=assistenten.boss 
-GROUP BY professoren.name 
-HAVING count(boss) = ( -- Dieser Teil findet die größte Anzahl an Assistenten, um die dann mit allen Professoren zu vergleichen.
-	SELECT count(boss) as assistenten -- Diese Query alleine würde schon ausreichen um !DEN! Professor mit den meisten Assistenten zu ermitteln,
-	FROM assistenten                  -- aber es ist nach allen gefragt, muss dieser wert noch weiter mit allen abgeglichen werden.
-	JOIN professoren ON professoren.persnr=assistenten.boss 
-	GROUP BY professoren.name ORDER BY assistenten DESC LIMIT 1 --
+-- ### START (Gleiche Abfrage wie oben) ###
+SELECT p.Name, COUNT(a.Boss) AS Anzahl_Assistenten
+FROM Assistenten a
+JOIN Professoren p ON p.PersNr = a.Boss
+GROUP BY p.PersNr, p.Name 
+HAVING COUNT(a.Boss) = (
+    -- Unterabfrage: Findet die höchste Anzahl an Assistenten
+    SELECT COUNT(*)
+    FROM assistenten
+    GROUP BY Boss 
+    ORDER BY COUNT(*) DESC 
+    LIMIT 1 
 );
--- ### ENDE (Copy & Paste aus Aufgabe 2)###
+-- ### ENDE ###
 
 
--- Optimierung aufheben
--- -Temporäre Indexe wieder löschen
+-- 4. AUFRÄUMEN
+-- Temporäre Indexe wieder löschen, um den Ursprungszustand herzustellen.
 DROP INDEX profpersnr_indx;
 DROP INDEX assboss_indx;
+
