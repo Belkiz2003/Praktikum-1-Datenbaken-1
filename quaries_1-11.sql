@@ -16,6 +16,12 @@ FROM hoeren
 JOIN vorlesungen ON vorlesungen.vorlnr = hoeren.vorlnr 
 WHERE vorlesungen.titel = 'Ethik';
 
+-- **1. -ERGEBNIS**
+--		matrnr
+--1		28106
+--2		29120
+
+
 -- 2. Welche Studenten haben schon mal mit 'Schopenhauer' gemeinsam eine Vorlesung gehört?
 -- Erklärung: Die unterabfrage wird dazu genutzt um erstmal alle VorlesungsNr zu fiden die von Schopenhauer gehört werden.
 -- Die Hauptabfrage filtert dann die Studenten die eine der Vorlesung hören.
@@ -32,6 +38,13 @@ WHERE h.VorlNr IN (
 )
 AND s.Name <> 'Schopenhauer'; -- Schopenhauer soll aus dem ergebnis ausgeschlossen werden
 
+-- **2. -ERGEBNIS**
+--		name
+--	1	Theophrastos
+--	2	Fichte
+--	3	Feuerbach
+
+
 -- 3. Welche Studenten hören ALLE Vorlesungen, die Schopenhauer hört?
 -- Erklärung: Hier nutze ich eine doppelte Verneinung (NOT EXISTS in NOT EXISTS).
 -- Ich suche quasi Studenten, bei denen es KEINE Vorlesung von Schopenhauer gibt, die sie NICHT hören.
@@ -46,12 +59,16 @@ WHERE NOT EXISTS (
     WHERE s_scho.Name = 'Schopenhauer'
     -- ... und prüfe, ob der aktuelle Student diese NICHT hört.
     AND NOT EXISTS (
-        SELECT h. VorlNr
+        SELECT h.VorlNr
         FROM hoeren h
         WHERE h.MatrNr = s.MatrNr
         AND h.VorlNr = h_scho.VorlNr
     )
 );
+
+-- **3. -ERGEBNIS**
+--		name
+--	1	Schopenhauer
 
 
 -- 4. Welche Vorlesungen (VorlNr) haben mindestens zwei andere Vorlesungen als Voraussetzung?
@@ -62,6 +79,10 @@ FROM voraussetzen
 GROUP BY Nachfolger 
 HAVING COUNT(*) >= 2;
 
+-- **4. -ERGEBNIS**
+--		vorlnr
+--	1	5052
+
 
 -- 5. Liste aller Vorlesungen und Anzahl der Prüfungen (absteigend sortiert)
 -- Erklärung: Ich habe hier einen LEFT JOIN benutzt. Ein normaler JOIN würde Vorlesungen ohne Prüfungen einfach weglassen.
@@ -71,6 +92,21 @@ FROM Vorlesungen v
 LEFT JOIN pruefen p ON v.VorlNr = p.VorlNr
 GROUP BY v.VorlNr, v.Titel
 ORDER BY Anzahl_Pruefungen DESC;
+
+-- **5. -ERGEBNIS**
+--		vorlnr	titel					anzahl_pruefungen
+--	1	5001	Grundzuege				1
+--	2	4630	Die 3 Kritiken			1
+--	3	5041	Ethik					1
+--	4	5043	Erkenntnistheorie		0
+--	5	5216	Bioethik				0
+--	6	5022	Glaube und Wissen		0
+--	7	5049	Maeeutik				0
+--	8	5052	Wissenschaftstheorie	0
+--	9	5259	Der Wiener Kreis		0
+--	10	4052	Logik					0
+
+
 
 -- *** AUFGABE 2: SQL-ANFRAGEN 6 bis 11 von Tobias Handwerk ***
 
@@ -90,6 +126,11 @@ HAVING COUNT(a.Boss) = (
     ORDER BY COUNT(*) DESC 
     LIMIT 1 
 );
+
+-- **6. -ERGEBNIS**
+--		name		anzahl_assistenten
+--	1	Sokrates	2
+--	2	Kopernikus	2
 
 
 -- 7. Welche Studierenden hören alle Vorlesungen?
@@ -116,14 +157,24 @@ HAVING COUNT(*) = (
 	SELECT COUNT(*) FROM Vorlesungen
 );
 
+-- **7. -ERGEBNIS**
+--		name	matrnr
+--	1	Hermione	10001
+
+
 -- Den Test-Datensatz lösche ich am Ende wieder (die Einträge in 'hoeren' verschwinden automatisch durch ON DELETE CASCADE).
 DELETE FROM Studenten WHERE MatrNr = 10001;
+
 
 -- 8. Wie oft wurde eine Prüfung mit der Note 1 oder 2 bewertet?
 -- Erklärung: Hier nutze ich einen simplen Filter (WHERE), um nur die Noten 1.0 und 2.0 zu zählen.
 SELECT COUNT(*) 
 FROM pruefen 
 WHERE Note = 1.0 OR Note = 2.0;
+
+-- **8. -ERGEBNIS**
+--		count
+--	1	3
 
 
 -- 9. Übersicht: MatrNr, Name, Durchschnittsnote und Varianz
@@ -137,6 +188,13 @@ SELECT s.Name, s.MatrNr,
 FROM Pruefen p
 JOIN Studenten s ON s.MatrNr = p.MatrNr -- Join um den Namen der Studenten zu ermitteln
 GROUP BY s.MatrNr, s.Name;
+
+-- **9. -ERGEBNIS**
+--		name			matrnr		durchschnitt	varianz
+--	1	Carnap			28106		1.00			NULL
+--	2	Jonas			25403		2.00			NULL
+--	3	Schopenhauer	27550		2.00			NULL
+
 
 
 -- 10. Gibt es Namen von Personen, die in mindestens zwei verschiedenen Tabellen auftreten?
@@ -157,8 +215,14 @@ FROM (
 ) AS AlleNamen
 GROUP BY Name
 HAVING COUNT(*) > 1;
+
+-- **10. -ERGEBNIS**
+--		name
+--	1	Sokrates
+
 -- Wichtig: Daten im nachinein löschen
 DELETE FROM Studenten WHERE MatrNr = 99999;
+
 
 -- 11. Welche Vorlesung hat welche andere als direkte oder indirekte Voraussetzung?
 -- Erklärung: Ich mache einen Self-Join auf die Tabelle voraussetzen (v1 mit v2).
@@ -172,3 +236,13 @@ FROM voraussetzen v1
 LEFT JOIN voraussetzen v2 ON v1.Nachfolger = v2.Vorgaenger
 ORDER BY v1.Vorgaenger;
 
+-- **11. -ERGEBNIS**
+--		vorlesung		direkter_nachfolger		indirekter_nachfolger
+--	1	5001			5041					5052
+--	2	5001			5041					5216
+--	3	5001			5043					5052
+--	4	5001			5049					NULL
+--	5	5041			5052					5259
+--	6	5041			5216					NULL
+--	7	5043			5052					5259
+--	8	5052			5259					NULL

@@ -1,3 +1,4 @@
+BEGIN; -- Start der Transaktion ; DB merkt sich alles bis zum COMMIT und führt dann alles als eine Transaktion aus
 
 INSERT INTO Studenten(MatrNr, Name, Semester) 
 VALUES (24002, 'Xenokrates', 18); 
@@ -25,26 +26,26 @@ VALUES (29555, 'Feuerbach', 2);
  
 
 
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2125, 'Sokrates', 226, 5001); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2125, 'Sokrates', 226); 
 
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2126, 'Russel', 232, 5041);  
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2126, 'Russel', 232);  
  
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2127, 'Kopernikus', 310, 5043); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2127, 'Kopernikus', 310); 
  
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2133, 'Popper', 052, 5049); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2133, 'Popper', 052); 
  
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2134, 'Augustinus', 309, 5052); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2134, 'Augustinus', 309); 
  
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2136, 'Curie', 036, 5022); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2136, 'Curie', 036); 
  
-INSERT INTO Professoren(PersNr, Name, Raum, VVorl) 
-VALUES (2137, 'Kant', 007, 4630); 
+INSERT INTO Professoren(PersNr, Name, Raum) 
+VALUES (2137, 'Kant', 007); 
  
  
  
@@ -97,6 +98,17 @@ VALUES (5022, 'Glaube und Wissen', 2, 2134);
  
 INSERT INTO Vorlesungen(VorlNr, Titel, SWS, gelesenVon) 
 VALUES (4630, 'Die 3 Kritiken', 4, 2137); 
+
+
+
+-- Datensätze vervollständigen (Problem der Zirkulären Referenzen)
+UPDATE Professoren SET VVorl = 5001 WHERE PersNr = 2125; -- Sokrates
+UPDATE Professoren SET VVorl = 5041 WHERE PersNr = 2126; -- Russel
+UPDATE Professoren SET VVorl = 5043 WHERE PersNr = 2127; -- Kopernikus
+UPDATE Professoren SET VVorl = 5049 WHERE PersNr = 2133; -- Popper
+UPDATE Professoren SET VVorl = 5052 WHERE PersNr = 2134; -- Augustinus
+UPDATE Professoren SET VVorl = 5022 WHERE PersNr = 2136; -- Curie
+UPDATE Professoren SET VVorl = 4630 WHERE PersNr = 2137; -- Kant
 
 
  
@@ -173,3 +185,5 @@ VALUES (25403, 5041, 2125, 2.0);
 
 INSERT INTO pruefen(MatrNr, VorlNr, PersNr, Note) 
 VALUES (27550, 4630, 2137, 2.0);
+
+COMMIT -- Ende der Transaktion ; Die Befehle zwischen BEGIN und COMMIT werden zwischengespeichert und als eine Transaktion in der Datenbank ausgeführt

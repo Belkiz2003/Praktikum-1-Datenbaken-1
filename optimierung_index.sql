@@ -1,4 +1,4 @@
--- *** AUFGABE 3: SQL-Optimierung von Michael Haselhof ***
+-- *** AUFGABE 3: SQL-Optimierung von Michael Haselhoff ***
 
 -- * Abfrage aus Aufgabe 2, die mittels Index optimiert werden soll --> Abfrage 6
 
@@ -53,3 +53,12 @@ HAVING COUNT(a.Boss) = (
 DROP INDEX profpersnr_indx;
 DROP INDEX assboss_indx;
 
+
+-- 5. VOR- und NACHHER -VERGLEICH
+-- -Vorher:
+-- --Planning-Time:  ca. 0,49  ms
+-- --Execution-Time: ca. 0,289 ms
+
+-- -Nachher:
+-- --Planning-Time:  ca. 0,369 ms
+-- --Execution-Time: ca. 0,180 ms

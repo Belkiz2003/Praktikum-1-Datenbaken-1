@@ -3,13 +3,14 @@
 -- Tabelle: Professoren
 -- Erklärung: Die Spalte VVorl verweist eigentlich auf die Vorlesungstabelle.
 -- Ich habe hier bewusst das 'NOT NULL' weggelassen. 
--- Grund: Da Vorlesungen auch Professoren brauchen (Zirkelbezug), lege ich erst die Professoren 
--- ohne Vorlesung an und trage die Verknüpfung später einfach mit einem UPDATE nach.
+-- Grund: Da Vorlesungen auch Professoren brauchen (Zirkelbezug), lege ich erst die Professoren ...
+-- ...ohne Vorlesung an und trage die Spalte mit Verknüpfung später einfach mit einem ALTER TABLE nach (in der Tabellenstruktur).
+-- ...ohne Vorlesung an und trage die Spalte mit Verknüpfung später einfach mit einem UPDATE nach (beim Füllen der Tabellen mittels INSERT INTO und UPDATE).
 CREATE TABLE Professoren (
 	PersNr INTEGER PRIMARY KEY,
 	Name VARCHAR(100) NOT NULL,
-	Raum VARCHAR(20),
-	VVorl INTEGER REFERENCES Vorlesungen(VorlNr)
+	Raum VARCHAR(20)--,
+	--VVorl INTEGER REFERENCES Vorlesungen(VorlNr)   -- Wird mittels ALTER TABLE nachträglich ergänzt
 );
 
 -- Tabelle: Vorlesungen
@@ -21,6 +22,11 @@ CREATE TABLE Vorlesungen (
 	SWS INTEGER CHECK (SWS > 0),
 	gelesenVon INTEGER NOT NULL REFERENCES Professoren(PersNr)
 );
+
+-- Tabelle Professoren anpassen/vervollständigen
+-- Spalte VVorl anlegen, die eine Spalte von Vorlesungen referenziert
+ALTER TABLE Professoren ADD VVorl INTEGER REFERENCES Vorlesungen(VorlNr);
+
 
 -- Tabelle: Studenten
 -- Erklärung: Ich habe als Standardwert (DEFAULT) für das Semester die 1 gesetzt, weil neue Studenten meistens im ersten Semester starten.
