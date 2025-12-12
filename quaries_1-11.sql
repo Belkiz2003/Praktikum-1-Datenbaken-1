@@ -120,22 +120,22 @@ HAVING COUNT(*) = (
 DELETE FROM Studenten WHERE MatrNr = 10001;
 
 -- 8. Wie oft wurde eine Prüfung mit der Note 1 oder 2 bewertet?
--- Erklärung: Hier nutze ich einen simplen Filter (WHERE), um nur Noten zwischen 1.0 und 2.0 zu zählen.
+-- Erklärung: Hier nutze ich einen simplen Filter (WHERE), um nur die Noten 1.0 und 2.0 zu zählen.
 SELECT COUNT(*) 
 FROM pruefen 
-WHERE Note >= 1.0 AND Note <= 2.0; 
+WHERE Note = 1.0 OR Note = 2.0;
 
 
 -- 9. Übersicht: MatrNr, Name, Durchschnittsnote und Varianz
 -- Erklärung: Ich nutze AVG für den Durchschnitt. 
--- Für die Varianz nehme ich die Funktion VARIANCE (nicht Max-Min, das wäre nur die Spannweite gewesen).
+-- Für die Varianz nehme ich die Funktion VARIANCE.
 -- Varianz = NULL da nur jeweils eine Prüfung geschrieben wurde.
 -- ROUND und TRUNC benutze ich nur, damit die Zahlen schöner aussehen.
 SELECT s.Name, s.MatrNr, 
        ROUND(AVG(p.Note), 2) AS Durchschnitt, 
        TRUNC(VARIANCE(p.Note), 2) AS Varianz
 FROM Pruefen p
-JOIN Studenten s ON s.MatrNr = p.MatrNr -- Join um den Namen dazu zu holen
+JOIN Studenten s ON s.MatrNr = p.MatrNr -- Join um den Namen der Studenten zu ermitteln
 GROUP BY s.MatrNr, s.Name;
 
 
@@ -163,7 +163,8 @@ DELETE FROM Studenten WHERE MatrNr = 99999;
 -- 11. Welche Vorlesung hat welche andere als direkte oder indirekte Voraussetzung?
 -- Erklärung: Ich mache einen Self-Join auf die Tabelle voraussetzen (v1 mit v2).
 -- v1 zeigt den direkten Vorgänger, v2 zeigt den Vorgänger vom Vorgänger (also indirekt).
--- Hinweis: Das funktioniert so nur bis zur zweiten Ebene (Großvater -> Vater -> Kind).
+-- Hinweis: Diese Query liefert nur bis zur zweiten Ebene (Großvater -> Vater -> Kind).
+-- Weitere Ebenen wären mit weiteren JOINs möglich
 SELECT v1.Vorgaenger AS Vorlesung, 
        v1.Nachfolger AS Direkter_Nachfolger, 
        v2.Nachfolger AS Indirekter_Nachfolger
